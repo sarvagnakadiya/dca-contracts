@@ -1,66 +1,22 @@
-## Foundry
-
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
-
-Foundry consists of:
-
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
-
-## Documentation
-
-https://book.getfoundry.sh/
-
-## Usage
-
-### Build
-
+# deployed from remix
 ```shell
-$ forge build
+0x44e567a0c93f49e503900894ecc508153e6fb77c
+```
+[Basescan](https://basescan.org/address/0x44e567a0c93f49e503900894ecc508153e6fb77c)
+
+# verify command
+```shell
+forge verify-contract --watch --chain base \
+0x44e567a0c93f49e503900894ecc508153e6fb77c \
+src/DCAExecutor.sol:DCAExecutor \
+--verifier etherscan \
+--etherscan-api-key <key> \
+--constructor-args 0x0000000000000000000000002626664c2603336e57b271c5c0b26f421741e4810000000000000000000000000000000000000000000000000000000000000064
 ```
 
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+📦src
+ ┣ 📂Interfaces
+ ┃ ┣ 📜[IDCAExecutor.sol](https://github.com/sarvagnakadiya/dca-contracts/blob/main/src/Interfaces/IDCAExecutor.sol)
+ ┃ ┣ [📜ISwapRouter.sol](https://github.com/sarvagnakadiya/dca-contracts/blob/main/src/Interfaces/ISwapRouter.sol)
+ ┃ ┗ [📜IWETH9.sol](https://github.com/sarvagnakadiya/dca-contracts/blob/main/src/Interfaces/IWETH9.sol)
+ ┗ 📜[DCAExecutor.sol](https://github.com/sarvagnakadiya/dca-contracts/blob/main/src/DCAExecutor.sol)
