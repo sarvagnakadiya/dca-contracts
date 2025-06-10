@@ -28,79 +28,35 @@ contract DCAExecutorTest is Test {
 
     function test_CreatePlan() public {
         vm.startPrank(user);
-        dcaExecutor.createPlan(usdc, btcb, user, 100);
+        dcaExecutor.createPlan(usdc, btcb, user);
 
         (
             address tokenIn,
             address tokenOut,
             address recipient,
-            uint256 lastExecution,
-            uint256 duration,
             bool active
-        ) = dcaExecutor.plans(user);
+        ) = dcaExecutor.userPlans(user, 0);
         assertEq(tokenIn, usdc);
         assertEq(tokenOut, btcb);
         assertEq(recipient, user);
-        assertEq(lastExecution, 0);
-        assertEq(duration, 100);
         assertTrue(active);
 
         vm.stopPrank();
     }
-
-    // function testFail_CreatePlanWithSameTokens() public {
-    //     vm.startPrank(user);
-    //     dcaExecutor.createPlan(usdc, usdc, user, 100);
-    //     vm.stopPrank();
-    // }
 
     function test_UpdatePlan() public {
         test_CreatePlan();
 
         vm.startPrank(user);
         address newRecipient = address(0x123);
-        uint256 newDuration = 200;
 
-        dcaExecutor.updatePlan(newRecipient, newDuration);
+        dcaExecutor.updateRecipient(0, newRecipient);
 
-        (, , address recipient, , uint256 duration, ) = dcaExecutor.plans(user);
+        (, , address recipient, ) = dcaExecutor.userPlans(user, 0);
         assertEq(recipient, newRecipient);
-        assertEq(duration, newDuration);
 
         vm.stopPrank();
     }
-
-    // function testFail_UpdatePlanWithoutActivePlan() public {
-    //     vm.startPrank(user);
-    //     dcaExecutor.updatePlan(address(0x123), 200);
-    //     vm.stopPrank();
-    // }
-
-    // function test_CancelPlan() public {
-    //     test_CreatePlan();
-
-    //     vm.startPrank(user);
-    //     dcaExecutor.cancelPlan();
-
-    //     (, , , , , bool active) = dcaExecutor.plans(user);
-    //     assertFalse(active);
-
-    //     vm.stopPrank();
-    // }
-
-    // function testFail_CancelPlanWithoutActivePlan() public {
-    //     vm.startPrank(user);
-    //     dcaExecutor.cancelPlan();
-    //     vm.stopPrank();
-    // }
-
-    // function test_UpdateRouter() public {
-    //     vm.startPrank(owner);
-    //     address newRouter = address(0x456);
-    //     dcaExecutor.updateRouter(newRouter);
-    //     assertEq(dcaExecutor.swapRouter(), newRouter);
-    //     vm.stopPrank();
-    // }
 
     function test_ExecuteDCAPlan() public {
         test_CreatePlan();
@@ -110,30 +66,37 @@ contract DCAExecutorTest is Test {
         vm.stopPrank();
 
         vm.startPrank(owner);
-        dcaExecutor.executeDCAPlan(user, 2000000, 10000);
+        console.log("recipient balance", address(user).balance);
+        uint256 balanceBefore = address(user).balance;
 
-        (, , , uint256 lastExecution, , ) = dcaExecutor.plans(user);
-        assertEq(lastExecution, block.timestamp);
+        uint256 amountOut = dcaExecutor.executeDCAPlan(user, 0, 2000000, 10000);
+        uint256 balanceAfter = address(user).balance;
+        console.log("amountOut", amountOut);
+
+        console.log("User balance", IERC20(usdc).balanceOf(user));
+        console.log("recipient balance", address(user).balance);
+        assertEq(balanceAfter - balanceBefore, amountOut);
 
         vm.stopPrank();
     }
 
-    // function testFail_ExecuteDCAPlanInactive() public {
-    //     test_CreatePlan();
-    //     test_CancelPlan();
+    function test_WithdrawFees() public {
+        test_ExecuteDCAPlan(); // This will create and execute a plan, generating fees
 
-    //     vm.startPrank(owner);
-    //     dcaExecutor.executeDCAPlan(user, amountIn, 3000);
-    //     vm.stopPrank();
-    // }
+        vm.startPrank(owner);
+        uint256 balanceBefore = IERC20(usdc).balanceOf(owner);
 
-    // function testFail_ExecuteDCAPlanTooEarly() public {
-    //     test_CreatePlan();
+        // Calculate expected fee amount (1% of 2000000 = 20000)
+        uint256 expectedFee = 20000;
+        dcaExecutor.withdrawFees(usdc, owner, expectedFee);
 
-    //     vm.startPrank(owner);
-    //     dcaExecutor.executeDCAPlan(user, amountIn, 3000);
-    //     // Try to execute again immediately
-    //     dcaExecutor.executeDCAPlan(user, amountIn, 3000);
-    //     vm.stopPrank();
-    // }
+        uint256 balanceAfter = IERC20(usdc).balanceOf(owner);
+        assertEq(
+            balanceAfter - balanceBefore,
+            expectedFee,
+            "Fee withdrawal amount incorrect"
+        );
+
+        vm.stopPrank();
+    }
 }

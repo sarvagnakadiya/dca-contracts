@@ -6,8 +6,6 @@ interface IDCAExecutor {
         address tokenIn;
         address tokenOut;
         address recipient;
-        uint256 lastExecution;
-        uint256 duration;
         bool active;
     }
 
@@ -22,24 +20,25 @@ interface IDCAExecutor {
 
     event PlanCreated(
         address indexed user,
+        uint256 indexed planId,
         address indexed tokenIn,
-        address indexed tokenOut,
-        address recipient,
-        uint256 duration
+        address tokenOut,
+        address recipient
     );
 
-    event PlanUpdated(
+    event RecipientUpdated(
         address indexed user,
-        address recipient,
-        uint256 duration
+        uint256 indexed planId,
+        address recipient
     );
 
-    event PlanCancelled(address indexed user);
+    event PlanCancelled(address indexed user, uint256 indexed planId);
 
     event DCAPlanExecuted(
         address indexed user,
+        uint256 indexed planId,
         address indexed tokenIn,
-        address indexed tokenOut,
+        address tokenOut,
         uint256 amountIn,
         uint256 amountOut,
         uint256 feeAmount
@@ -60,19 +59,26 @@ interface IDCAExecutor {
     function createPlan(
         address _tokenIn,
         address _tokenOut,
-        address _recipient,
-        uint256 _duration
+        address _recipient
     ) external;
-    function updatePlan(address _recipient, uint256 _duration) external;
+    function updateRecipient(uint256 _planId, address _recipient) external;
     function executeDCAPlan(
         address _user,
+        uint256 _planId,
         uint256 _amountIn,
         uint24 _poolFee
+    ) external returns (uint256 amountOut);
+    function withdrawFees(
+        address _token,
+        address _to,
+        uint256 _amount
     ) external;
-    function withdrawFees(address _token, address _to) external;
-    function cancelPlan() external;
+    function cancelPlan(uint256 _planId) external;
     function checkApproval(
         address _token,
         address _owner
     ) external view returns (uint256);
+    function getAllUserPlans(
+        address _user
+    ) external view returns (DCAPlan[] memory);
 }
